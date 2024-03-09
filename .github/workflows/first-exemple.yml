@@ -8,11 +8,12 @@ jobs:
         steps:
         - name: Checkout Repo
           uses: actions/checkout@v4
-        - name: Welcome message
-          run: echo "my first pippeline"
-        
-        - name: list files
-          run: ls
-        
-        - name: read file
-          run: cat README.md
+          
+        - name: List and Read file
+          run: |
+              echo "my first pippeline"
+              ls -ltra
+              cat README.md
+
+        - name: Generate ASCII Artwork
+          run: cowsay -f dragon "Run for cover, I am a dragon ..." >> dragon.txt
