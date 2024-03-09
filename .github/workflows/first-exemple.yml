@@ -7,7 +7,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - name: Welcome message
-          run: echo "my first pipeline"
+          run: echo "my first pippeline"
         
         - name: list files
           run: ls
