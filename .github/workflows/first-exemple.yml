@@ -13,7 +13,7 @@ jobs:
           run: |
               echo "my first pippeline"
               ls -ltra
-              cat README
+              cat README.md
 
         - name: Generate ASCII Artwork
           run: cowsay -f dragon "Run for cover, I am a dragon ..." >> dragon.txt
