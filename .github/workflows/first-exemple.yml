@@ -1,3 +1,4 @@
+Il semble qu'il y ait une erreur de syntaxe dans le fichier YAML. Voici une version corrigée du pipeline GitHub Actions, avec une attention particulière à la syntaxe correcte :
 name: CI/CD Pipeline
 
 on:
@@ -94,14 +95,16 @@ env:
   DOMAIN: ${{ github.event.inputs.Domain }}
   SERVICELINE: ${{ github.event.inputs.ServiceLine }}
   TFVARS_PATH: ${{ github.event.inputs.TFVARS_PATH }}
-  TFVARS_SECRET: ${{ github.event.inputs.TFVAR_SECRET }}
+  TFVARS_SECRET: ${{ github.event.inputs.TFVARS_SECRET }}
   TERRAFORM_VERSION: ${{ github.event.inputs.TerraformVersion }}
-  - name: Set environment variables
-    run: |
-      if [[ "$ENVIRONMENT" == "PRD" || "$ENVIRONMENT" == "PPR" ]]; then
-        echo "VG_GROUP=vg-${DOMAIN}-${SERVICELINE}-wpr" >> $GITHUB_ENV
-      else
-        echo "VG_GROUP=vg-${DOMAIN}-${SERVICELINE}-wnp" >> $GITHUB_ENV
-      fi
-      echo "VG_GROUP=vg-infracost-pipeline" >> $GITHUB_ENV
-      echo "VG_GROUP=SSH" >> $GITHUB_ENV
+
+  steps:
+    - name: Set environment variables
+      run: |
+        if [[ "$ENVIRONMENT" == "PRD" || "$ENVIRONMENT" == "PPR" ]]; then
+          echo "VG_GROUP=vg-${DOMAIN}-${SERVICELINE}-wpr" >> $GITHUB_ENV
+        else
+          echo "VG_GROUP=vg-${DOMAIN}-${SERVICELINE}-wnp" >> $GITHUB_ENV
+        fi
+        echo "VG_GROUP=vg-infracost-pipeline" >> $GITHUB_ENV
+        echo "VG_GROUP=SSH" >> $GITHUB_ENV
