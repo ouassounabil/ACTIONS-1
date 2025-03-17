@@ -1,19 +1,107 @@
-name: My First Workflow
+name: CI/CD Pipeline
 
-on: push
+on:
+  workflow_dispatch:
+    inputs:
+      Environment:
+        description: 'Select Environment'
+        required: true
+        type: choice
+        options:
+          - DEV
+          - UAT
+          - STG
+          - TST
+          - PPR
+          - PRD
+      Domain:
+        description: 'Enter Domain'
+        required: true
+        type: string
+      ServiceLine:
+        description: 'Enter Service Line'
+        required: true
+        type: string
+      TFVARS_PATH:
+        description: 'Enter TFVARS Path'
+        required: true
+        type: string
+      TFVARS_SECRET:
+        description: 'Enter TFVARS Secret'
+        required: false
+        type: string
+        default: ' '
+      TerraformVersion:
+        description: 'Terraform Version'
+        required: false
+        type: string
+        default: '1.5.7'
 
 jobs:
-    first_job:
-        runs-on: ubuntu-latest
-        steps:
-        - name: Checkout Repo
-          uses: actions/checkout@v4
-          
-        - name: List and Read file
-          run: |
-              echo "my first pippeline"
-              ls -ltra
-              cat README.md
+  security:
+    name: Static Scan for ${{ github.event.inputs.Domain }}-${{ github.event.inputs.ServiceLine }}-${{ github.event.inputs.Environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Run Security Pipeline
+        uses: ./.github/actions/security_pipeline
+        with:
+          Environment: ${{ github.event.inputs.Environment }}
+          Domain: ${{ github.event.inputs.Domain }}
+          ServiceLine: ${{ github.event.inputs.ServiceLine }}
+          TFVARS_PATH: ${{ github.event.inputs.TFVARS_PATH }}
+          TFVARS_SECRET: ${{ github.event.inputs.TFVARS_SECRET }}
+          TerraformVersion: ${{ github.event.inputs.TerraformVersion }}
 
-        - name: Generate ASCII Artwork
-          run: cowsay -f dragon "Run for cover, I am a dragon ..." >> dragon.txt
+  build:
+    name: Build Stage for ${{ github.event.inputs.Domain }}-${{ github.event.inputs.ServiceLine }}-${{ github.event.inputs.Environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Run Build Pipeline
+        uses: ./.github/actions/build_pipeline
+        with:
+          Environment: ${{ github.event.inputs.Environment }}
+          Domain: ${{ github.event.inputs.Domain }}
+          ServiceLine: ${{ github.event.inputs.ServiceLine }}
+          TFVARS_PATH: ${{ github.event.inputs.TFVARS_PATH }}
+          TFVARS_SECRET: ${{ github.event.inputs.TFVARS_SECRET }}
+          TerraformVersion: ${{ github.event.inputs.TerraformVersion }}
+
+  deploy:
+    name: Deploy Stage for ${{ github.event.inputs.Domain }}-${{ github.event.inputs.ServiceLine }}-${{ github.event.inputs.Environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Run Deploy Pipeline
+        uses: ./.github/actions/deploy_pipeline
+        with:
+          Environment: ${{ github.event.inputs.Environment }}
+          Domain: ${{ github.event.inputs.Domain }}
+          ServiceLine: ${{ github.event.inputs.ServiceLine }}
+          TFVARS_PATH: ${{ github.event.inputs.TFVARS_PATH }}
+          TFVARS_SECRET: ${{ github.event.inputs.TFVARS_SECRET }}
+          TerraformVersion: ${{ github.event.inputs.TerraformVersion }}
+
+env:
+  ENVIRONMENT: ${{ github.event.inputs.Environment }}
+  DOMAIN: ${{ github.event.inputs.Domain }}
+  SERVICELINE: ${{ github.event.inputs.ServiceLine }}
+  TFVARS_PATH: ${{ github.event.inputs.TFVARS_PATH }}
+  TFVARS_SECRET: ${{ github.event.inputs.TFVAR_SECRET }}
+  TERRAFORM_VERSION: ${{ github.event.inputs.TerraformVersion }}
+  - name: Set environment variables
+    run: |
+      if [[ "$ENVIRONMENT" == "PRD" || "$ENVIRONMENT" == "PPR" ]]; then
+        echo "VG_GROUP=vg-${DOMAIN}-${SERVICELINE}-wpr" >> $GITHUB_ENV
+      else
+        echo "VG_GROUP=vg-${DOMAIN}-${SERVICELINE}-wnp" >> $GITHUB_ENV
+      fi
+      echo "VG_GROUP=vg-infracost-pipeline" >> $GITHUB_ENV
+      echo "VG_GROUP=SSH" >> $GITHUB_ENV
